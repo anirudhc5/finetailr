@@ -1,44 +1,41 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { User, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
+import { User, onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
+import {
+    createContext,
+    useState,
+    useEffect,
+    useContext,
+    ReactNode,
+} from "react";
 
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  signInWithGoogle: () => Promise<void>;
-  logout: () => Promise<void>;
+type AuthContextType = {
+    user: User | null;
+    loading: boolean;
+};
+
+const context = createContext<AuthContextType>({ user: null, loading: false });
+
+function AuthProvider({ children }: { children: ReactNode }) {
+    const [user, setuser] = useState<User | null>(null);
+    const [loading, setloading] = useState<boolean>(true);
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+            setuser(firebaseUser);
+            setloading(false);
+        });
+        return unsubscribe;
+    }, []);
+    return (
+        <context.Provider value={{ user: user, loading: loading }}>
+            {children}
+        </context.Provider>
+    );
 }
 
-const AuthContext = createContext<AuthContextType>({} as AuthContextType);
-
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
-    });
-    return unsubscribe;
-  }, []);
-
-  const signInWithGoogle = async () => {
-    const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
-  };
-
-  const logout = async () => {
-    await signOut(auth);
-  };
-
-  return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+function useAuth() {
+    return useContext(context);
 }
 
-export const useAuth = () => useContext(AuthContext);
+export { AuthProvider, useAuth };
