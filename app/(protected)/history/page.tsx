@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { db } from "@/lib/firebase";
 
 interface Application {
     id: string;

@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/AuthContext";
+import { db } from "@/lib/firebase";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 
 interface Experience {
     company: string;
@@ -40,7 +42,6 @@ export default function ProfilePage() {
     const [linkedinUrl, setLinkedinUrl] = useState("");
     const [portfolioUrl, setPortfolioUrl] = useState("");
 
-    // Skill tag list states
     const [skills, setSkills] = useState<string[]>([
         "TypeScript",
         "React.js",
@@ -49,7 +50,6 @@ export default function ProfilePage() {
     ]);
     const [skillInput, setSkillInput] = useState("");
 
-    // Repeatable Experience arrays
     const [experiences, setExperiences] = useState<Experience[]>([
         {
             company: "Google",
@@ -79,10 +79,7 @@ export default function ProfilePage() {
         },
     ]);
 
-    // Other section states
-    const [extracurriculars, setExtracurriculars] = useState(
-        "• President of Coding Club\n• Volunteer at Local Food Bank",
-    );
+    const [extracurriculars, setExtracurriculars] = useState("");
     const [languages, setLanguages] = useState<string[]>([
         "English (Native)",
         "Mandarin (Fluent)",
@@ -90,7 +87,6 @@ export default function ProfilePage() {
     const [langInput, setLangInput] = useState("");
     const [showAddLang, setShowAddLang] = useState(false);
 
-    // Save State Animation
     const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">(
         "idle",
     );
@@ -107,7 +103,6 @@ export default function ProfilePage() {
         }
     };
 
-    // Add skill on Enter or Comma
     const handleSkillKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter" || e.key === ",") {
             e.preventDefault();
@@ -123,7 +118,6 @@ export default function ProfilePage() {
         setSkills(skills.filter((_, idx) => idx !== indexToRemove));
     };
 
-    // repeatable experiences methods
     const addExperience = () => {
         setExperiences([
             ...experiences,
@@ -186,7 +180,6 @@ export default function ProfilePage() {
         setExperiences(experiences.filter((_, idx) => idx !== indexToRemove));
     };
 
-    // repeatable projects methods
     const addProject = () => {
         setProjects([
             ...projects,
@@ -230,31 +223,52 @@ export default function ProfilePage() {
     };
 
     // Simulate Save
-    const handleSaveProfile = () => {
+    const handleSaveProfile = async () => {
+        if (!user) return;
         setSaveStatus("saving");
-        // TODO: Connect Firestore document write to users/{userId}
-        console.log("Saving profile changes to Firestore database...", {
-            basicInfo: {
+        try {
+            const userRef = doc(db, "users", user.uid);
+            await setDoc(userRef, {
                 name,
                 email,
                 linkedinUrl,
                 portfolioUrl,
-            },
-            skills,
-            experiences,
-            projects,
-            education,
-            extracurriculars,
-            languages,
-        });
-
-        setTimeout(() => {
+                experiences,
+                projects,
+                education,
+                skills,
+                extracurriculars,
+                languages,
+            });
             setSaveStatus("saved");
-            setTimeout(() => {
-                setSaveStatus("idle");
-            }, 2000);
-        }, 1000);
+            setTimeout(() => setSaveStatus("idle"), 2000);
+        } catch (e) {
+            console.log("Save error.", e);
+            setSaveStatus("idle");
+        }
     };
+
+    useEffect(() => {
+        const loadProfile = async () => {
+            if (!user) return;
+            const userRef = doc(db, "users", user.uid);
+            const snapshot = await getDoc(userRef);
+            if (snapshot.exists()) {
+                const data = snapshot.data();
+                setName(data.name ?? "");
+                setEmail(data.email ?? "");
+                setLinkedinUrl(data.linkedinUrl ?? "");
+                setPortfolioUrl(data.portfolioUrl ?? "");
+                setSkills(data.skills ?? []);
+                setExperiences(data.experiences ?? []);
+                setProjects(data.projects ?? []);
+                setEducation(data.education ?? []);
+                setExtracurriculars(data.extracurriculars ?? "");
+                setLanguages(data.languages ?? []);
+            }
+        };
+        loadProfile();
+    }, [user]);
 
     return (
         <main className="flex-grow max-w-container-max mx-auto w-full px-lg py-xl pt-[7rem]">
@@ -736,7 +750,7 @@ export default function ProfilePage() {
                                             <input
                                                 className="bg-surface-container-lowest border border-outline-variant rounded p-sm text-on-surface font-body-md text-body-md form-input-focus"
                                                 type="text"
-                                                placeholder={edu.univ}
+                                                value={edu.univ ?? ""}
                                                 onChange={(e) =>
                                                     updateEducation(
                                                         idx,
@@ -753,6 +767,7 @@ export default function ProfilePage() {
                                             <input
                                                 className="bg-surface-container-lowest border border-outline-variant rounded p-sm text-on-surface font-body-md text-body-md form-input-focus"
                                                 type="text"
+                                                value={edu.gpa ?? ""}
                                                 onChange={(e) =>
                                                     updateEducation(
                                                         idx,
@@ -769,6 +784,7 @@ export default function ProfilePage() {
                                             <input
                                                 className="bg-surface-container-lowest border border-outline-variant rounded p-sm text-on-surface font-body-md text-body-md form-input-focus"
                                                 type="month"
+                                                value={edu.startDate ?? ""}
                                                 onChange={(e) =>
                                                     updateEducation(
                                                         idx,
@@ -785,7 +801,7 @@ export default function ProfilePage() {
                                             <input
                                                 className="bg-surface-container-lowest border border-outline-variant rounded p-sm text-on-surface font-body-md text-body-md form-input-focus"
                                                 type="month"
-                                                placeholder={edu.endDate}
+                                                value={edu.endDate ?? ""}
                                                 onChange={(e) =>
                                                     updateEducation(
                                                         idx,
@@ -802,7 +818,7 @@ export default function ProfilePage() {
                                             <div className="relative">
                                                 <select
                                                     className="w-full appearance-none bg-surface-container-lowest border border-outline-variant rounded p-sm text-on-surface font-body-md text-body-md form-input-focus pr-10"
-                                                    defaultValue=""
+                                                    value={edu.degree ?? ""}
                                                     onChange={(e) =>
                                                         updateEducation(
                                                             idx,
@@ -864,7 +880,7 @@ export default function ProfilePage() {
                                             <input
                                                 className="bg-surface-container-lowest border border-outline-variant rounded p-sm text-on-surface font-body-md text-body-md form-input-focus"
                                                 type="text"
-                                                placeholder={edu.field}
+                                                value={edu.field ?? ""}
                                                 onChange={(e) =>
                                                     updateEducation(
                                                         idx,
@@ -954,7 +970,7 @@ export default function ProfilePage() {
                             </h2>
                             <textarea
                                 className="w-full bg-surface-container-lowest border border-outline-variant rounded p-sm text-on-surface font-body-md text-body-md form-input-focus resize-none"
-                                placeholder="• President of Coding Club • Volunteer at Local Food Bank..."
+                                placeholder="Enter extracurriculars here..."
                                 rows={3}
                                 value={extracurriculars}
                                 onChange={(e) =>
