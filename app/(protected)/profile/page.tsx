@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/lib/AuthContext";
 
 interface Experience {
     company: string;
@@ -19,20 +20,23 @@ interface Education {
     univ: string;
     degree: string;
     field: string;
-    start?: number;
-    end: number;
-    gpa?: number;
+    startDate?: string;
+    endDate: string;
+    gpa?: string;
 }
 
 export default function ProfilePage() {
     // Sidebar active shortcut selection state
+    const { user } = useAuth();
     const [activeSection, setActiveSection] = useState("basic-info");
 
     // Basic Info Form States
-    const [name, setName] = useState("");
-    const [email, setEmail] = useState("");
-    const [university, setUniversity] = useState("");
-    const [gpa, setGpa] = useState("");
+    const [name, setName] = useState(
+        user ? (user.displayName ? user.displayName : "") : "",
+    );
+    const [email, setEmail] = useState(
+        user ? (user.email ? user.email : "") : "",
+    );
     const [linkedinUrl, setLinkedinUrl] = useState("");
     const [portfolioUrl, setPortfolioUrl] = useState("");
 
@@ -66,9 +70,16 @@ export default function ProfilePage() {
         },
     ]);
 
+    const [education, setEducation] = useState<Education[]>([
+        {
+            univ: "University of Maryland",
+            degree: "Bachelor's Degree",
+            field: "Computer Science",
+            endDate: "2028-05",
+        },
+    ]);
+
     // Other section states
-    const [degree, setDegree] = useState("B.S. in Computer Science");
-    const [gradYear, setGradYear] = useState("2025");
     const [extracurriculars, setExtracurriculars] = useState(
         "• President of Coding Club\n• Volunteer at Local Food Bank",
     );
@@ -124,6 +135,37 @@ export default function ProfilePage() {
                 bullets: "",
             },
         ]);
+    };
+
+    const addEducation = () => {
+        setEducation([
+            ...education,
+            {
+                univ: "",
+                degree: "",
+                field: "",
+                endDate: "",
+            },
+        ]);
+    };
+
+    const updateEducation = (
+        index: number,
+        field: keyof Education,
+        value: string,
+    ) => {
+        const updated = education.map((edu, idx) => {
+            if (idx === index) {
+                return { ...edu, [field]: value };
+            }
+            return edu;
+        });
+        setEducation(updated);
+        console.log(updated);
+    };
+
+    const removeEducation = (idx: number) => {
+        setEducation(education.filter((_, i) => i !== idx));
     };
 
     const updateExperience = (
@@ -195,15 +237,13 @@ export default function ProfilePage() {
             basicInfo: {
                 name,
                 email,
-                university,
-                gpa,
                 linkedinUrl,
                 portfolioUrl,
             },
             skills,
             experiences,
             projects,
-            education: { degree, gradYear },
+            education,
             extracurriculars,
             languages,
         });
@@ -352,32 +392,6 @@ export default function ProfilePage() {
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                />
-                            </div>
-                            <div className="flex flex-col gap-xs">
-                                <label className="font-label-md text-label-md text-on-surface-variant">
-                                    Current University
-                                </label>
-                                <input
-                                    className="bg-surface-container-lowest border border-outline-variant rounded p-sm text-on-surface font-body-md text-body-md form-input-focus"
-                                    placeholder="University of Maryland"
-                                    type="text"
-                                    value={university}
-                                    onChange={(e) =>
-                                        setUniversity(e.target.value)
-                                    }
-                                />
-                            </div>
-                            <div className="flex flex-col gap-xs">
-                                <label className="font-label-md text-label-md text-on-surface-variant">
-                                    GPA
-                                </label>
-                                <input
-                                    className="bg-surface-container-lowest border border-outline-variant rounded p-sm text-on-surface font-body-md text-body-md form-input-focus"
-                                    placeholder="3.5 / 4.0"
-                                    type="text"
-                                    value={gpa}
-                                    onChange={(e) => setGpa(e.target.value)}
                                 />
                             </div>
                             <div className="flex flex-col gap-xs sm:col-span-2">
@@ -674,11 +688,200 @@ export default function ProfilePage() {
                         </div>
                     </section>
 
-                    {/* Education & Others Section */}
                     <section
-                        className="grid grid-cols-1 gap-lg"
+                        className="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg"
                         id="education-others"
                     >
+                        <div className="flex justify-between items-center mb-lg">
+                            <div>
+                                <h2 className="font-headline-lg text-headline-lg">
+                                    Education
+                                </h2>
+                                <p className="text-on-surface-variant font-body-sm text-body-sm">
+                                    Build your credibility with education.
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={addEducation}
+                                className="flex items-center gap-xs text-primary font-label-md text-label-md hover:underline cursor-pointer font-semibold"
+                            >
+                                <span className="material-symbols-outlined text-[20px]">
+                                    add
+                                </span>{" "}
+                                Add Education
+                            </button>
+                        </div>
+                        <div className="space-y-lg">
+                            {education.map((edu, idx) => (
+                                <div
+                                    key={idx}
+                                    className="p-lg border border-outline-variant rounded-lg bg-white relative space-y-md"
+                                >
+                                    <button
+                                        type="button"
+                                        onClick={() => removeEducation(idx)}
+                                        className="absolute top-md right-md text-on-surface-variant hover:text-error transition-colors cursor-pointer"
+                                        title="Remove project entry"
+                                    >
+                                        <span className="material-symbols-outlined">
+                                            delete
+                                        </span>
+                                    </button>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-md pt-sm">
+                                        <div className="flex flex-col gap-xs">
+                                            <label className="font-label-md text-label-md text-on-surface-variant">
+                                                University Name
+                                            </label>
+                                            <input
+                                                className="bg-surface-container-lowest border border-outline-variant rounded p-sm text-on-surface font-body-md text-body-md form-input-focus"
+                                                type="text"
+                                                placeholder={edu.univ}
+                                                onChange={(e) =>
+                                                    updateEducation(
+                                                        idx,
+                                                        "univ",
+                                                        e.target.value,
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                        <div className="flex flex-col gap-xs">
+                                            <label className="font-label-md text-label-md text-on-surface-variant">
+                                                GPA
+                                            </label>
+                                            <input
+                                                className="bg-surface-container-lowest border border-outline-variant rounded p-sm text-on-surface font-body-md text-body-md form-input-focus"
+                                                type="text"
+                                                onChange={(e) =>
+                                                    updateEducation(
+                                                        idx,
+                                                        "gpa",
+                                                        e.target.value,
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                        <div className="flex flex-col gap-xs">
+                                            <label className="font-label-md text-label-md text-on-surface-variant">
+                                                Start Date
+                                            </label>
+                                            <input
+                                                className="bg-surface-container-lowest border border-outline-variant rounded p-sm text-on-surface font-body-md text-body-md form-input-focus"
+                                                type="month"
+                                                onChange={(e) =>
+                                                    updateEducation(
+                                                        idx,
+                                                        "startDate",
+                                                        e.target.value,
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                        <div className="flex flex-col gap-xs">
+                                            <label className="font-label-md text-label-md text-on-surface-variant">
+                                                End Date
+                                            </label>
+                                            <input
+                                                className="bg-surface-container-lowest border border-outline-variant rounded p-sm text-on-surface font-body-md text-body-md form-input-focus"
+                                                type="month"
+                                                placeholder={edu.endDate}
+                                                onChange={(e) =>
+                                                    updateEducation(
+                                                        idx,
+                                                        "endDate",
+                                                        e.target.value,
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                        <div className="flex flex-col gap-xs">
+                                            <label className="font-label-md text-label-md text-on-surface-variant">
+                                                Degree
+                                            </label>
+                                            <div className="relative">
+                                                <select
+                                                    className="w-full appearance-none bg-surface-container-lowest border border-outline-variant rounded p-sm text-on-surface font-body-md text-body-md form-input-focus pr-10"
+                                                    defaultValue=""
+                                                    onChange={(e) =>
+                                                        updateEducation(
+                                                            idx,
+                                                            "degree",
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                >
+                                                    <option value="" disabled>
+                                                        Select a degree
+                                                    </option>
+                                                    <option value="High School Diploma">
+                                                        High School Diploma
+                                                    </option>
+                                                    <option value="Associate's">
+                                                        Associate&apos;s
+                                                    </option>
+                                                    <option value="Bachelor's">
+                                                        Bachelor&apos;s
+                                                    </option>
+                                                    <option value="Master's">
+                                                        Master&apos;s
+                                                    </option>
+                                                    <option value="MBA">
+                                                        MBA
+                                                    </option>
+                                                    <option value="PhD">
+                                                        PhD
+                                                    </option>
+                                                    <option value="JD">
+                                                        JD
+                                                    </option>
+                                                    <option value="Other">
+                                                        Other
+                                                    </option>
+                                                </select>
+                                                {/* Custom chevron icon */}
+                                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-sm">
+                                                    <svg
+                                                        className="w-4 h-4 text-on-surface-variant"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M19 9l-7 7-7-7"
+                                                        />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col gap-xs">
+                                            <label className="font-label-md text-label-md text-on-surface-variant">
+                                                Field
+                                            </label>
+                                            <input
+                                                className="bg-surface-container-lowest border border-outline-variant rounded p-sm text-on-surface font-body-md text-body-md form-input-focus"
+                                                type="text"
+                                                placeholder={edu.field}
+                                                onChange={(e) =>
+                                                    updateEducation(
+                                                        idx,
+                                                        "field",
+                                                        e.target.value,
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* Others Section */}
+                    <section className="grid grid-cols-1 gap-lg" id="others">
                         {/* Languages */}
                         <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg">
                             <h2 className="font-headline-md text-headline-md mb-md">
