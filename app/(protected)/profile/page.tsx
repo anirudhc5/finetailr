@@ -4,28 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { db } from "@/lib/firebase";
 import { doc, setDoc, getDoc } from "firebase/firestore";
-
-interface Experience {
-    company: string;
-    role: string;
-    startDate: string;
-    endDate?: string;
-    bullets: string;
-}
-
-interface Project {
-    name: string;
-    description: string;
-}
-
-interface Education {
-    univ: string;
-    degree: string;
-    field: string;
-    startDate?: string;
-    endDate: string;
-    gpa?: string;
-}
+import { Experience, Project, Education } from "@/app/types";
 
 export default function ProfilePage() {
     // Sidebar active shortcut selection state
@@ -56,7 +35,7 @@ export default function ProfilePage() {
             role: "Software Engineering Intern",
             startDate: "2023-05",
             endDate: "2023-08",
-            bullets:
+            description:
                 "Developed a new feature for the internal dashboard using React.",
         },
     ]);
@@ -126,7 +105,7 @@ export default function ProfilePage() {
                 role: "",
                 startDate: "",
                 endDate: "",
-                bullets: "",
+                description: "",
             },
         ]);
     };
@@ -602,11 +581,11 @@ export default function ProfilePage() {
                                                 className="bg-surface-container-lowest border border-outline-variant rounded p-sm text-on-surface font-body-md text-body-md form-input-focus resize-none"
                                                 placeholder="• Developed a new feature for the internal dashboard..."
                                                 rows={4}
-                                                value={exp.bullets}
+                                                value={exp.description}
                                                 onChange={(e) =>
                                                     updateExperience(
                                                         idx,
-                                                        "bullets",
+                                                        "description",
                                                         e.target.value,
                                                     )
                                                 }

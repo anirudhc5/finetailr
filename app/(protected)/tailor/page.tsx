@@ -1,51 +1,81 @@
 "use client";
 
 import { useState } from "react";
+import { GeminiResult } from "@/lib/gemini";
+import { useAuth } from "@/lib/AuthContext";
+import { saveApplication } from "@/lib/firestore";
 
 export default function TailorPage() {
     const [company, setCompany] = useState("");
     const [jobTitle, setJobTitle] = useState("");
     const [jobDescription, setJobDescription] = useState("");
     const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [results, setResults] = useState<GeminiResult | null>(null);
 
     // Mocks representing the analysis results (all static placeholders with // TODO)
-    const atsScore = 74;
-    const matchLabel = "Fair Match";
-    const matchedKeywords = ["React", "TypeScript", "System Design"];
-    const missingKeywords = ["AWS Lambda", "CI/CD Pipelines", "Redis"];
-
-    const rewrittenBullets = [
-        {
-            original:
-                "Responsible for building the dashboard using React and managing states.",
-            rewritten:
-                "Engineered a high-performance analytics dashboard using React, improving data visualization speed by 40%.",
-        },
-        {
-            original:
-                "Fixed bugs in the backend and helped with the database migration.",
-            rewritten:
-                "Optimized backend stability by resolving 50+ critical bugs and led a zero-downtime PostgreSQL migration.",
-        },
-    ];
+    const { user } = useAuth();
+    const matchedKeywords = results?.matchedKeywords ?? [];
+    const missingKeywords = results?.missingKeywords ?? [];
+    const rewrittenBullets = results?.tailoredBullets ?? [];
 
     // SVG parameters
-    const radius = 40;
-    const circumference = 2 * Math.PI * radius; // ~251.2
-    const strokeDashoffset = circumference - (circumference * atsScore) / 100;
 
-    const handleAnalyze = () => {
-        // TODO: Connect Firebase backend analysis flow & Gemini API request
-        console.log("Analyzing resume for application:", {
-            company,
-            jobTitle,
-            descriptionLength: jobDescription.length,
-        });
+    const handleAnalyze = async () => {
+        if (!user) return;
+        if (!company || !jobTitle || !jobDescription) {
+            alert("Please fill in all fields before analyzing.");
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const response = await fetch("/api/analyze", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    userId: user.uid,
+                    jobDescription,
+                    company,
+                    jobTitle,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error ?? "Analysis failed.");
+            }
+
+            setResults(data);
+        } catch (error) {
+            console.error("Analysis error:", error);
+            alert("Something went wrong. Please try again.");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleSave = () => {
-        // TODO: Connect Firestore storage call to save tailoring application
-        console.log("Saving tailored application record to Firestore...");
+    const handleSave = async () => {
+        if (!user || !results) {
+            alert("Nothing to save yet. Run an analysis first.");
+            return;
+        }
+
+        try {
+            await saveApplication(
+                user.uid,
+                company,
+                jobTitle,
+                jobDescription,
+                results,
+            );
+            alert("Application saved!");
+        } catch (error) {
+            console.error("Save error:", error);
+            alert("Failed to save. Please try again.");
+        }
     };
 
     const handleReset = () => {
@@ -125,9 +155,10 @@ export default function TailorPage() {
                         </div>
                         <button
                             onClick={handleAnalyze}
-                            className="w-full py-md bg-primary-container text-on-primary font-bold rounded-lg hover:bg-primary transition-all active:scale-[0.98] flex items-center justify-center gap-sm cursor-pointer"
+                            disabled={loading}
+                            className="w-full py-md bg-primary-container text-on-primary font-bold rounded-lg hover:bg-primary transition-all active:scale-[0.98] flex items-center justify-center gap-sm cursor-pointer disabled:opacity-50"
                         >
-                            Analyze My Resume
+                            {loading ? "Analyzing..." : "Analyze My Resume"}
                         </button>
                     </div>
                 </section>
@@ -176,6 +207,17 @@ export default function TailorPage() {
                             </div>
                         </div>
                     </div>
+
+                    {results?.recommendation && (
+                        <div className="bg-surface-container-lowest border border-outline-variant rounded-lg p-lg shadow-soft">
+                            <h3 className="font-label-sm text-label-sm text-on-surface-variant uppercase mb-sm block">
+                                Prioritization Recommendation
+                            </h3>
+                            <p className="font-body-md text-on-surface">
+                                {results.recommendation}
+                            </p>
+                        </div>
+                    )}
 
                     {/* Suggested Bullet Rewrites */}
                     <div className="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden shadow-soft">
