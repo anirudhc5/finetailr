@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { z } from "zod";
 import { Experience, Project } from "@/app/types";
 
@@ -77,11 +77,14 @@ export async function analyzeWithGemini(
     const prompt = buildPrompt(profile, jobDescription);
 
     const response = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
+        model: "gemini-3.5-flash",
         contents: prompt,
         config: {
             responseMimeType: "application/json",
             responseJsonSchema: z.toJSONSchema(analysisSchema),
+            thinkingConfig: {
+                thinkingLevel: ThinkingLevel.LOW,
+            },
         },
     });
 
