@@ -104,7 +104,7 @@ export default function DashboardPage() {
                                     Application History
                                 </h3>
                                 <p className="text-body-sm font-body-sm text-on-surface-variant">
-                                    Track your progress across 12 recent
+                                    Track your progress across all your recent
                                     applications.
                                 </p>
                             </div>
@@ -114,73 +114,7 @@ export default function DashboardPage() {
                             >
                                 View All
                             </button>
-                        </div>
-                        <div className="divide-y divide-outline-variant">
-                            {/* TODO: Integrate Firebase Application History fetch */}
-                            <div className="p-lg flex items-center justify-between hover:bg-surface-container-low transition-colors">
-                                <div className="flex items-center gap-md">
-                                    <div className="w-12 h-12 bg-surface-container rounded-lg flex items-center justify-center">
-                                        <span className="material-symbols-outlined text-primary">
-                                            business
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <p className="font-label-md text-label-md">
-                                            Senior Product Designer
-                                        </p>
-                                        <p className="text-body-sm font-body-sm text-on-surface-variant">
-                                            TechFlow Inc. • Applied 2 days ago
-                                        </p>
-                                    </div>
-                                </div>
-                                <span className="px-sm py-xs bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm rounded-lg font-semibold">
-                                    Interviewing
-                                </span>
-                            </div>
-
-                            <div className="p-lg flex items-center justify-between hover:bg-surface-container-low transition-colors">
-                                <div className="flex items-center gap-md">
-                                    <div className="w-12 h-12 bg-surface-container rounded-lg flex items-center justify-center">
-                                        <span className="material-symbols-outlined text-primary">
-                                            corporate_fare
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <p className="font-label-md text-label-md">
-                                            Creative Lead
-                                        </p>
-                                        <p className="text-body-sm font-body-sm text-on-surface-variant">
-                                            Studio Minimal • Applied 1 week ago
-                                        </p>
-                                    </div>
-                                </div>
-                                <span className="px-sm py-xs bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm rounded-lg font-semibold">
-                                    Under Review
-                                </span>
-                            </div>
-
-                            <div className="p-lg flex items-center justify-between hover:bg-surface-container-low transition-colors">
-                                <div className="flex items-center gap-md">
-                                    <div className="w-12 h-12 bg-surface-container rounded-lg flex items-center justify-center">
-                                        <span className="material-symbols-outlined text-primary">
-                                            apartment
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <p className="font-label-md text-label-md">
-                                            UX Strategist
-                                        </p>
-                                        <p className="text-body-sm font-body-sm text-on-surface-variant">
-                                            Vanguard Solutions • Applied 2 weeks
-                                            ago
-                                        </p>
-                                    </div>
-                                </div>
-                                <span className="px-sm py-xs bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm rounded-lg font-semibold">
-                                    Under Review
-                                </span>
-                            </div>
-                        </div>
+                        </div>  
                     </div>
                 </div>
             </main>
@@ -193,7 +127,7 @@ export default function DashboardPage() {
                             FineTailr
                         </span>
                         <span className="text-label-sm font-label-sm text-on-surface-variant">
-                            © FineTailr
+                            © FineTailr 2026
                         </span>
                     </div>
                     <nav className="flex gap-lg">

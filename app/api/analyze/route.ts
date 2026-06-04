@@ -1,24 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { adminDb, adminAuth } from "@/lib/firebaseAdmin";
 import { analyzeWithGemini } from "@/lib/gemini";
 
 export async function POST(req: NextRequest) {
     try {
-        const { userId, jobDescription, company, jobTitle } = await req.json();
+        const authHeader = req.headers.get("Authorization");
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return NextResponse.json(
+                { error: "Unauthorized: Missing Authorization header" },
+                { status: 401 },
+            );
+        }
 
-        if (!userId || !jobDescription || !company || !jobTitle) {
+        const token = authHeader.split("Bearer ")[1];
+        let decodedToken;
+        try {
+            decodedToken = await adminAuth.verifyIdToken(token);
+        } catch (error) {
+            console.error("Token verification failed:", error);
+            return NextResponse.json(
+                { error: "Unauthorized: Invalid token" },
+                { status: 401 },
+            );
+        }
+
+        const userId = decodedToken.uid;
+        const { jobDescription, company, jobTitle } = await req.json();
+
+        if (!jobDescription || !company || !jobTitle) {
             return NextResponse.json(
                 { error: "Missing required fields." },
                 { status: 400 },
             );
         }
 
-        // Fetch the user's profile from Firestore
-        const userRef = doc(db, "users", userId);
-        const userSnap = await getDoc(userRef);
+        // Fetch the user's profile from Firestore using Admin SDK
+        const userSnap = await adminDb.collection("users").doc(userId).get();
 
-        if (!userSnap.exists()) {
+        if (!userSnap.exists) {
             return NextResponse.json(
                 { error: "User profile not found." },
                 { status: 404 },
@@ -26,6 +45,14 @@ export async function POST(req: NextRequest) {
         }
 
         const profile = userSnap.data();
+        if (!profile) {
+            return NextResponse.json(
+                { error: "User profile has no data." },
+                { status: 400 },
+            );
+        }
+
+        console.log(profile);
 
         const result = await analyzeWithGemini(
             {

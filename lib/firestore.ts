@@ -14,7 +14,7 @@ import { GeminiResult } from "@/lib/gemini";
 
 export async function getApplications(userId: string): Promise<Application[]> {
     const ref = collection(db, "users", userId, "applications");
-    const q = query(ref, orderBy("createdAt", "desc"));
+    const q = query(ref, orderBy("date", "desc"));
     const snapshot = await getDocs(q);
 
     return snapshot.docs.map((doc) => ({
