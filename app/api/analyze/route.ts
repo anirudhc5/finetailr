@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminDb, adminAuth } from "@/lib/firebaseAdmin";
+import { getAdminDb, getAdminAuth } from "@/lib/firebaseAdmin";
 import { analyzeWithGemini } from "@/lib/gemini";
 
 export async function POST(req: NextRequest) {
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
         const token = authHeader.split("Bearer ")[1];
         let decodedToken;
         try {
-            decodedToken = await adminAuth.verifyIdToken(token);
+            decodedToken = await getAdminAuth().verifyIdToken(token);
         } catch (error) {
             console.error("Token verification failed:", error);
             return NextResponse.json(
@@ -35,7 +35,10 @@ export async function POST(req: NextRequest) {
         }
 
         // Fetch the user's profile from Firestore using Admin SDK
-        const userSnap = await adminDb.collection("users").doc(userId).get();
+        const userSnap = await getAdminDb()
+            .collection("users")
+            .doc(userId)
+            .get();
 
         if (!userSnap.exists) {
             return NextResponse.json(
