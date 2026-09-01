@@ -30,7 +30,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files (never send secrets into the image)
 .env*
 
 # vercel
@@ -40,6 +40,14 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-
 GEMINI.md
 AGENTS.md
+summer-1-4a472-firebase-adminsdk-fbsvc-803cd28df5.json
+
+# Docker-specific additions
+.git
+.gitignore
+Dockerfile
+.dockerignore
+docker-compose.yml
+README.md
