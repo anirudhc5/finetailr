@@ -114,7 +114,7 @@ export default function DashboardPage() {
                             >
                                 View All
                             </button>
-                        </div>  
+                        </div>
                     </div>
                 </div>
             </main>

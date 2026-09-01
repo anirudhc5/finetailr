@@ -34,9 +34,9 @@ export default function TailorPage() {
             const idToken = await user.getIdToken();
             const response = await fetch("/api/analyze", {
                 method: "POST",
-                headers: { 
+                headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${idToken}`
+                    Authorization: `Bearer ${idToken}`,
                 },
                 body: JSON.stringify({
                     jobDescription,
